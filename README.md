@@ -1,5 +1,7 @@
 # Geko TikTok Sticker Telegram Bot (All-in-One Production)
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/gek0v/tiktok-sticker-telegram-bot)
+
 Suite consolidada y lista para despliegue en la nube (**Render Free Tier $0**) del bot de stickers multimedia de TikTok para Telegram y WhatsApp.
 
 ---
@@ -14,26 +16,27 @@ El contenedor unifica los tres microservicios en una imagen Docker ligera (~280 
 
 ---
 
-## 🚀 Despliegue en Render (Paso a Paso)
+## 🚀 Despliegue en Render (1 Clic)
 
-### Opción 1: Despliegue con Blueprint (`render.yaml`)
-1. Sube este repositorio a tu cuenta de GitHub/GitLab.
-2. Inicia sesión en [Render Dashboard](https://dashboard.render.com/).
-3. Haz clic en **New +** > **Blueprint**.
-4. Selecciona el repositorio. Render detectará automáticamente `render.yaml` y configurará el servicio.
-5. Introduce el valor de `TELEGRAM_BOT_TOKEN` cuando te lo solicite y pulsa **Apply**.
+### Opción 1: Despliegue Automático con Botón Directo
+Haz clic en el siguiente enlace para desplegar directamente con la configuración predefinida:
+
+👉 **[Desplegar en Render (1-Click Deploy)](https://render.com/deploy?repo=https://github.com/gek0v/tiktok-sticker-telegram-bot)**
+
+Render leerá automáticamente el archivo `render.yaml`, preparará el contenedor Docker y solo te solicitará rellenar el token de Telegram:
+* **`TELEGRAM_BOT_TOKEN`**: Tu token de Telegram de [@BotFather](https://t.me/BotFather).
 
 ### Opción 2: Despliegue Manual como Web Service
 1. En [Render Dashboard](https://dashboard.render.com/), haz clic en **New +** > **Web Service**.
-2. Conecta tu repositorio de GitHub/GitLab.
+2. Conecta tu repositorio: `https://github.com/gek0v/tiktok-sticker-telegram-bot`.
 3. Configuración:
    - **Name:** `geko-tiktok-telegram-bot`
    - **Region:** Frankfurt (EU) u Ohio (US)
    - **Language / Runtime:** `Docker`
    - **Dockerfile Path:** `./Dockerfile`
    - **Instance Type:** `Free` ($0/mes)
-4. En la sección **Environment Variables**, añade:
-   - `TELEGRAM_BOT_TOKEN`: El token secreto de tu bot de Telegram obtenido de [@BotFather](https://t.me/BotFather).
+4. En **Environment Variables**, añade:
+   - `TELEGRAM_BOT_TOKEN`: El token secreto de tu bot de Telegram.
    - `SIGNER_MODE`: `remote`
    - `REMOTE_SIGNER_URL`: `http://127.0.0.1:8088`
 5. En **Health Check Path**, escribe: `/health`
@@ -47,5 +50,5 @@ Los servicios gratuitos de Render entran en suspensión tras 15 minutos sin trá
 
 1. Ve a un servicio gratuito de monitoreo como [Cron-job.org](https://cron-job.org) o [UptimeRobot](https://uptimerobot.com).
 2. Crea un monitor **HTTP GET** con intervalo de **10 minutos**:
-   - **URL:** `https://tu-servicio.onrender.com/health`
-3. Esto enviará una petición periódica ligera que mantendrá el contenedor siempre activo al 100% sin agotar cuotas.
+   - **URL:** `https://tu-servicio.onrender.com/health` (sustituye por la URL que te asigne Render al desplegar).
+3. Esto enviará una petición periódica ultra ligera que mantendrá el contenedor siempre activo al 100% sin agotar cuotas.
