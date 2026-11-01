@@ -1,446 +1,332 @@
 # -*- coding: utf-8 -*-
 """
-Landing page & Uptime monitor view for Geko TikTok Sticker Suite.
+Geko TikTok Sticker Suite - Architecture & Presentation Landing Page.
 Industrial Telemetry & Engineering Console Design.
 Author & Architecture: Geko (@gek0v)
 """
 
 def get_landing_html(app_name: str, app_version: str) -> str:
-    return f"""<!DOCTYPE html>
+    html_template = """<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GEKO // STICKER ENGINE • Telemetry &amp; System Hub</title>
-  <meta name="description" content="Plataforma de alta velocidad para extracción, ingeniería inversa de firmas Aweme y transcodificación de stickers para WhatsApp y Telegram. Desarrollado por Geko.">
+  <title>GEKO // STICKER ENGINE • Architecture &amp; System Hub</title>
+  <meta name="description" content="Plataforma de alta velocidad para extracción, ingeniería inversa de firmas Aweme y transcodificación de stickers para WhatsApp y Telegram. Creado por Geko.">
   <meta name="author" content="Geko (@gek0v)">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;0,800;1,400&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root {{
+    :root {
       --bg: #090a0d;
       --bg-alt: #0e1117;
       --panel: #12161f;
       --panel-head: #171c26;
-      --border: #262c38;
-      --border-bright: #3d4659;
-      --amber: #ff9f1c;
-      --amber-dim: rgba(255, 159, 28, 0.12);
+      --border: #1f2735;
+      --border-bright: #2e3a4e;
+      --border-active: #ff9f1c;
+      --text: #e2e8f0;
+      --text-muted: #8492a6;
+      --text-dim: #4e5d78;
+      --accent: #ff9f1c;
+      --accent-dim: rgba(255, 159, 28, 0.12);
       --green: #00e676;
       --green-dim: rgba(0, 230, 118, 0.12);
-      --red: #ff3366;
       --cyan: #00f0ff;
       --cyan-dim: rgba(0, 240, 255, 0.1);
-      --text: #e6edf3;
-      --text-muted: #8b949e;
-      --text-dim: #5c6575;
-      --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
-      --font-mono: 'JetBrains Mono', monospace;
-    }}
+      --font-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
 
-    * {{
+    * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-    }}
+    }
 
-    body {{
-      font-family: var(--font-display);
+    body {
       background-color: var(--bg);
-      background-image: 
-        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-      background-size: 32px 32px;
       color: var(--text);
-      min-height: 100vh;
+      font-family: var(--font-sans);
       line-height: 1.5;
-      padding-bottom: 4rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-image: 
+        linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 32px 32px;
       -webkit-font-smoothing: antialiased;
-    }}
+    }
 
-    /* Top Global Ribbon */
-    .telemetry-tape {{
-      background: #000;
+    /* Top Status Tape */
+    .telemetry-tape {
+      background: #040507;
       border-bottom: 1px solid var(--border);
-      padding: 0.4rem 1.25rem;
       font-family: var(--font-mono);
       font-size: 0.72rem;
       color: var(--text-muted);
+      padding: 0.45rem 1.5rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 0.5rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }}
+      gap: 1rem;
+      letter-spacing: 0.05em;
+    }
 
-    .tape-group {{
+    .tape-group {
       display: flex;
       align-items: center;
-      gap: 1rem;
-    }}
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
 
-    .tape-item strong {{
+    .tape-item strong {
       color: var(--text);
       font-weight: 600;
-    }}
+    }
 
-    .tape-item.amber strong {{
-      color: var(--amber);
-    }}
+    .tape-item.amber strong {
+      color: var(--accent);
+    }
 
-    .tape-item.green strong {{
+    .tape-item.green strong {
       color: var(--green);
-    }}
+    }
 
-    .container {{
-      max-width: 1080px;
+    .tape-item.cyan strong {
+      color: var(--cyan);
+    }
+
+    .container {
+      max-width: 1180px;
       margin: 0 auto;
-      padding: 0 1.25rem;
-    }}
+      padding: 0 1.5rem;
+      width: 100%;
+    }
 
-    /* Main Console Header */
-    header.console-header {{
+    /* Header */
+    header.console-header {
+      padding: 2.25rem 0 1.75rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1.5rem 0;
       border-bottom: 1px solid var(--border);
-      margin-bottom: 2rem;
       flex-wrap: wrap;
-      gap: 1rem;
-    }}
+      gap: 1.25rem;
+    }
 
-    .brand-mark {{
+    .brand-mark {
       display: flex;
       align-items: center;
-      gap: 0.9rem;
+      gap: 1rem;
       text-decoration: none;
-      color: inherit;
-    }}
+    }
 
-    .brand-symbol {{
-      width: 38px;
-      height: 38px;
-      background: var(--bg-alt);
+    .brand-symbol {
+      width: 44px;
+      height: 44px;
+      background: #000000;
       border: 1px solid var(--border-bright);
+      color: var(--accent);
       display: flex;
       align-items: center;
       justify-content: center;
       font-family: var(--font-mono);
       font-weight: 800;
-      font-size: 1.15rem;
-      color: var(--amber);
+      font-size: 1.35rem;
       position: relative;
-    }}
+    }
 
-    .brand-symbol::after {{
+    .brand-symbol::after {
       content: '';
       position: absolute;
-      top: -2px;
-      left: -2px;
+      bottom: -1px;
+      right: -1px;
       width: 6px;
       height: 6px;
-      background: var(--amber);
-    }}
+      background: var(--accent);
+    }
 
-    .brand-title {{
-      font-family: var(--font-mono);
-      font-weight: 700;
-      font-size: 1.05rem;
-      letter-spacing: -0.01em;
+    .brand-title {
       display: flex;
       flex-direction: column;
-    }}
+    }
 
-    .brand-subtitle {{
-      font-size: 0.68rem;
-      color: var(--text-muted);
-      letter-spacing: 0.14em;
+    .brand-title span:first-child {
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 1.15rem;
+      letter-spacing: 0.1em;
+      color: #ffffff;
       text-transform: uppercase;
-      font-weight: 400;
-    }}
+    }
 
-    .nav-actions {{
+    .brand-subtitle {
+      font-family: var(--font-mono);
+      font-size: 0.73rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+
+    .nav-actions {
       display: flex;
       align-items: center;
       gap: 0.75rem;
-    }}
+    }
 
-    .console-btn {{
+    .console-btn {
       font-family: var(--font-mono);
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      padding: 0.5rem 0.9rem;
-      background: var(--bg-alt);
+      padding: 0.55rem 1rem;
+      background: var(--panel);
+      border: 1px solid var(--border);
       color: var(--text);
-      border: 1px solid var(--border-bright);
       text-decoration: none;
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
       transition: all 0.15s ease;
       cursor: pointer;
-    }}
+    }
 
-    .console-btn:hover {{
+    .console-btn:hover {
+      border-color: var(--border-bright);
       background: var(--panel-head);
-      border-color: var(--amber);
-      color: var(--amber);
-    }}
+      color: #fff;
+    }
 
-    .console-btn.primary {{
-      background: var(--amber);
+    .console-btn.primary {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .console-btn.primary:hover {
+      background: var(--accent);
       color: #000;
-      border-color: var(--amber);
-    }}
+    }
 
-    .console-btn.primary:hover {{
-      background: #ffb13b;
-      color: #000;
-    }}
+    /* Hero */
+    .hero-spec {
+      padding: 3rem 0 2rem;
+      border-bottom: 1px solid var(--border);
+    }
 
-    /* Hero / System Spec */
-    .hero-spec {{
-      padding: 1.5rem 0 2rem;
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 1.5rem;
-    }}
-
-    .hero-meta {{
+    .hero-meta {
       font-family: var(--font-mono);
-      font-size: 0.75rem;
-      color: var(--amber);
+      font-size: 0.73rem;
+      color: var(--accent);
       letter-spacing: 0.15em;
       text-transform: uppercase;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.75rem;
       display: flex;
       align-items: center;
-      gap: 0.6rem;
-    }}
+      gap: 0.5rem;
+    }
 
-    .hero-meta::before {{
+    .hero-meta::before {
       content: '//';
       color: var(--text-dim);
-    }}
+    }
 
-    h1.hero-heading {{
-      font-size: clamp(1.8rem, 4vw, 2.7rem);
+    h1.hero-heading {
+      font-size: clamp(1.9rem, 4vw, 2.85rem);
       font-weight: 700;
-      letter-spacing: -0.03em;
       line-height: 1.15;
+      letter-spacing: -0.03em;
       color: #ffffff;
-      margin-bottom: 0.85rem;
-    }}
+      max-width: 900px;
+      margin-bottom: 1rem;
+    }
 
-    .hero-lead {{
+    .hero-lead {
       font-size: 1.05rem;
       color: var(--text-muted);
-      max-width: 780px;
+      max-width: 820px;
       line-height: 1.6;
-    }}
+    }
 
-    /* Main Telemetry & UpTime Console Box */
-    .telemetry-rack {{
-      background: var(--panel);
-      border: 1px solid var(--border);
-      margin: 1.5rem 0 3rem;
-      position: relative;
-    }}
-
-    .rack-header {{
-      background: var(--panel-head);
-      border-bottom: 1px solid var(--border);
-      padding: 0.75rem 1.25rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 0.75rem;
-    }}
-
-    .rack-title {{
-      font-family: var(--font-mono);
-      font-size: 0.82rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-    }}
-
-    .led-indicator {{
-      width: 8px;
-      height: 8px;
-      background-color: var(--green);
-      display: inline-block;
-      box-shadow: 0 0 8px var(--green);
-    }}
-
-    .led-indicator.amber {{
-      background-color: var(--amber);
-      box-shadow: 0 0 8px var(--amber);
-    }}
-
-    .led-indicator.red {{
-      background-color: var(--red);
-      box-shadow: 0 0 8px var(--red);
-    }}
-
-    .rack-badge {{
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      background: var(--green-dim);
-      border: 1px solid var(--green);
-      color: var(--green);
-      padding: 0.25rem 0.65rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      font-weight: 600;
-    }}
-
-    /* Canvas Oscilloscope / Latency Wave */
-    .rack-monitor-body {{
-      padding: 1.25rem;
-    }}
-
-    .canvas-container {{
-      background: #060709;
-      border: 1px solid var(--border);
-      margin-bottom: 1.25rem;
-      position: relative;
-      height: 80px;
-      display: flex;
-      align-items: center;
-    }}
-
-    #oscilloscope {{
-      width: 100%;
-      height: 100%;
-      display: block;
-    }}
-
-    .canvas-overlay-text {{
-      position: absolute;
-      top: 6px;
-      left: 10px;
-      font-family: var(--font-mono);
-      font-size: 0.68rem;
-      color: var(--text-dim);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      pointer-events: none;
-    }}
-
-    /* Metrics Grid */
-    .metrics-grid {{
+    /* Hardware Specs Strip */
+    .specs-strip {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       gap: 1px;
       background: var(--border);
       border: 1px solid var(--border);
-    }}
+      margin: 2rem 0 3rem;
+    }
 
-    .metric-cell {{
+    .spec-box {
       background: var(--bg-alt);
-      padding: 1.1rem;
+      padding: 1.25rem;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-    }}
+      gap: 0.35rem;
+    }
 
-    .metric-tag {{
+    .spec-box-label {
       font-family: var(--font-mono);
       font-size: 0.68rem;
       color: var(--text-dim);
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-bottom: 0.4rem;
-    }}
+    }
 
-    .metric-val {{
+    .spec-box-value {
       font-family: var(--font-mono);
-      font-size: 1.35rem;
+      font-size: 1.15rem;
       font-weight: 700;
       color: #ffffff;
-      letter-spacing: -0.02em;
-    }}
+      letter-spacing: -0.01em;
+    }
 
-    .metric-sub {{
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      margin-top: 0.3rem;
-    }}
-
-    /* UpTime Action Strip */
-    .uptime-dispatch {{
-      margin-top: 1.25rem;
-      background: #000;
-      border: 1px solid var(--border);
-      padding: 1rem 1.25rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 1rem;
-    }}
-
-    .uptime-spec-code {{
-      font-family: var(--font-mono);
+    .spec-box-desc {
       font-size: 0.78rem;
       color: var(--text-muted);
-    }}
+      line-height: 1.4;
+    }
 
-    .uptime-spec-code span.target {{
-      color: var(--cyan);
-      font-weight: 600;
-    }}
-
-    .uptime-controls {{
-      display: flex;
-      gap: 0.6rem;
-    }}
-
-    /* Architecture Grid */
-    .section-header-box {{
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 0.6rem;
-      margin: 3rem 0 1.5rem;
+    /* Section Headings */
+    .section-header-box {
+      margin: 2.75rem 0 1.25rem;
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
-    }}
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.75rem;
+    }
 
-    .section-tag {{
+    .section-tag {
       font-family: var(--font-mono);
-      font-size: 0.72rem;
-      color: var(--amber);
-      letter-spacing: 0.15em;
+      font-size: 0.7rem;
+      color: var(--accent);
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-    }}
+      margin-bottom: 0.25rem;
+    }
 
-    .section-title-plain {{
+    .section-title-plain {
       font-size: 1.35rem;
       font-weight: 700;
       color: #ffffff;
       letter-spacing: -0.01em;
-    }}
+    }
 
-    .arch-grid {{
+    /* Architecture Grid */
+    .arch-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1.25rem;
-    }}
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
 
-    .arch-card {{
+    .arch-card {
       background: var(--panel);
       border: 1px solid var(--border);
       padding: 1.4rem;
@@ -448,229 +334,232 @@ def get_landing_html(app_name: str, app_version: str) -> str:
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      transition: border-color 0.15s ease;
-    }}
+      transition: border-color 0.2s ease;
+    }
 
-    .arch-card:hover {{
+    .arch-card:hover {
       border-color: var(--border-bright);
-    }}
+    }
 
-    .arch-top {{
+    .arch-top {
       display: flex;
       justify-content: space-between;
-      align-items: baseline;
+      align-items: center;
       margin-bottom: 1rem;
-    }}
+    }
 
-    .arch-num {{
+    .arch-num {
       font-family: var(--font-mono);
-      font-size: 0.72rem;
+      font-size: 0.85rem;
       font-weight: 700;
-      color: var(--amber);
-      border: 1px solid var(--border);
-      padding: 0.15rem 0.45rem;
-      background: var(--bg);
-    }}
+      color: var(--accent);
+    }
 
-    .arch-protocol {{
+    .arch-protocol {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      background: #000;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 0.2rem 0.5rem;
+      letter-spacing: 0.08em;
+    }
+
+    .arch-card h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 0.5rem;
+    }
+
+    .arch-card p {
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    .arch-card code {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      background: rgba(255,255,255,0.06);
+      padding: 0.1rem 0.35rem;
+      color: var(--text);
+    }
+
+    .arch-footer {
+      margin-top: 1.25rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid rgba(255,255,255,0.05);
       font-family: var(--font-mono);
       font-size: 0.68rem;
       color: var(--text-dim);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }}
-
-    .arch-card h3 {{
-      font-size: 1.05rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-      color: #ffffff;
-      font-family: var(--font-mono);
-    }}
-
-    .arch-card p {{
-      font-size: 0.86rem;
-      color: var(--text-muted);
-      line-height: 1.5;
-    }}
-
-    .arch-footer {{
-      margin-top: 1rem;
-      padding-top: 0.75rem;
-      border-top: 1px solid var(--border);
-      font-family: var(--font-mono);
-      font-size: 0.68rem;
-      color: var(--cyan);
       display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }}
+      justify-content: space-between;
+    }
 
-    /* Benchmark Rack Table */
-    .bench-table-wrap {{
-      background: var(--panel);
+    /* Benchmarks Table */
+    .bench-table-wrap {
       border: 1px solid var(--border);
-      margin-top: 1.5rem;
+      background: var(--panel);
+      margin-bottom: 3rem;
       overflow-x: auto;
-    }}
+    }
 
-    table.bench-table {{
+    table.bench-table {
       width: 100%;
       border-collapse: collapse;
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       text-align: left;
-    }}
+    }
 
-    table.bench-table th {{
+    table.bench-table th {
       background: var(--panel-head);
-      border-bottom: 1px solid var(--border);
-      padding: 0.75rem 1rem;
-      font-weight: 600;
+      padding: 0.85rem 1.25rem;
+      font-family: var(--font-mono);
       font-size: 0.7rem;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
       color: var(--text-muted);
-    }}
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+    }
 
-    table.bench-table td {{
-      padding: 0.85rem 1rem;
+    table.bench-table td {
+      padding: 1rem 1.25rem;
       border-bottom: 1px solid var(--border);
       color: var(--text);
-    }}
+      font-family: var(--font-mono);
+    }
 
-    table.bench-table tr:last-child td {{
+    table.bench-table tr:last-child td {
       border-bottom: none;
-    }}
+    }
 
-    .delta-badge {{
-      color: var(--green);
+    table.bench-table tr:hover td {
+      background: rgba(255,255,255,0.02);
+    }
+
+    .delta-badge {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
       font-weight: 700;
-    }}
+      color: var(--green);
+      background: var(--green-dim);
+      border: 1px solid var(--green);
+      padding: 0.2rem 0.5rem;
+    }
 
-    /* Machine Spec & Creator Plate (Geko) */
-    .spec-plate-container {{
-      margin: 3.5rem 0 2rem;
-    }}
+    /* Author Plate */
+    .spec-plate-container {
+      margin: 2.5rem 0 4rem;
+    }
 
-    .spec-plate {{
-      background: #0b0d11;
-      border: 2px solid var(--border-bright);
-      padding: 1.75rem;
+    .spec-plate {
+      background: linear-gradient(180deg, #121620 0%, #0d1017 100%);
+      border: 1px solid var(--border-bright);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+      padding: 2.25rem;
       position: relative;
-    }}
+    }
 
-    .spec-plate::before {{
+    .spec-plate::before {
       content: 'ETCHED CERTIFICATION SPEC // 2026.11';
       position: absolute;
-      top: -10px;
-      left: 16px;
-      background: #0b0d11;
-      padding: 0 8px;
+      top: -9px;
+      left: 1.5rem;
+      background: #000;
+      border: 1px solid var(--border-bright);
+      padding: 0.15rem 0.65rem;
       font-family: var(--font-mono);
-      font-size: 0.65rem;
-      color: var(--amber);
+      font-size: 0.62rem;
+      color: var(--text-dim);
       letter-spacing: 0.12em;
-      text-transform: uppercase;
-      font-weight: 700;
-    }}
+    }
 
-    .spec-plate-header {{
+    .spec-plate-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 1.25rem;
       margin-bottom: 1.25rem;
       flex-wrap: wrap;
-      gap: 1rem;
-    }}
+      gap: 1.25rem;
+    }
 
-    .architect-title {{
-      font-size: 1.4rem;
+    .architect-title {
+      font-family: var(--font-mono);
+      font-size: 1.6rem;
       font-weight: 800;
-      font-family: var(--font-mono);
       color: #ffffff;
-      letter-spacing: -0.02em;
-    }}
+      letter-spacing: 0.08em;
+    }
 
-    .architect-role {{
+    .architect-role {
       font-family: var(--font-mono);
-      font-size: 0.75rem;
-      color: var(--amber);
-      letter-spacing: 0.12em;
+      font-size: 0.76rem;
+      color: var(--accent);
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       margin-top: 0.2rem;
-    }}
+    }
 
-    .spec-plate-body {{
-      font-size: 0.9rem;
+    .spec-plate-body {
+      font-size: 0.95rem;
       color: var(--text-muted);
-      line-height: 1.6;
-      max-width: 800px;
+      line-height: 1.7;
+      max-width: 950px;
       margin-bottom: 1.5rem;
-    }}
+    }
 
-    .spec-tags {{
+    .spec-tags {
       display: flex;
       flex-wrap: wrap;
       gap: 0.5rem;
-      margin-bottom: 1.5rem;
-    }}
+      margin-top: 1rem;
+    }
 
-    .spec-tag {{
-      background: var(--bg);
-      border: 1px solid var(--border);
+    .spec-tag {
       font-family: var(--font-mono);
-      font-size: 0.72rem;
-      color: var(--text-mono);
-      padding: 0.3rem 0.6rem;
-    }}
+      font-size: 0.68rem;
+      background: #000000;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 0.35rem 0.75rem;
+      letter-spacing: 0.05em;
+    }
 
-    /* Global Footer */
-    footer.console-footer {{
-      margin-top: 3rem;
+    /* Footer */
+    footer.console-footer {
+      margin-top: auto;
       border-top: 1px solid var(--border);
-      padding-top: 1.5rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      background: #050608;
+      padding: 1.75rem 0;
       font-family: var(--font-mono);
       font-size: 0.72rem;
       color: var(--text-dim);
+    }
+
+    .footer-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       flex-wrap: wrap;
       gap: 1rem;
-    }}
-
-    /* Notification Toast */
-    #toast {{
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: var(--amber);
-      color: #000;
-      font-family: var(--font-mono);
-      font-size: 0.78rem;
-      font-weight: 700;
-      padding: 0.6rem 1rem;
-      border: 1px solid #000;
-      display: none;
-      box-shadow: 4px 4px 0px rgba(0,0,0,0.5);
-      z-index: 1000;
-    }}
+    }
   </style>
 </head>
 <body>
 
-  <!-- Top Telemetry Tape -->
+  <!-- Top Status Tape -->
   <div class="telemetry-tape">
     <div class="tape-group">
-      <div class="tape-item">NODE: <strong>RENDER-FREE-P1</strong></div>
-      <div class="tape-item">REGION: <strong>FRA / EU-CENTRAL</strong></div>
-      <div class="tape-item green">DAEMON: <strong>8088/TCP ONLINE</strong></div>
+      <div class="tape-item">SYS: <strong>ONLINE</strong></div>
+      <div class="tape-item">NODE: <strong>RENDER-P1 [FRA]</strong></div>
+      <div class="tape-item green">DAEMON: <strong>8088/TCP AWEME SIGNER</strong></div>
+      <div class="tape-item cyan">BUILD: <strong>v{{APP_VERSION}}</strong></div>
     </div>
     <div class="tape-group">
-      <div class="tape-item">UPTIME TARGET: <strong>24/7 KEEP-ALIVE</strong></div>
+      <div class="tape-item">RUNTIME: <strong>DOCKER / PYTHON 3.12</strong></div>
       <div class="tape-item amber">CLK: <strong id="clock-display">--:--:-- UTC+1</strong></div>
     </div>
   </div>
@@ -692,7 +581,7 @@ def get_landing_html(app_name: str, app_version: str) -> str:
           </svg>
           <span>src: gek0v/repo</span>
         </a>
-        <a href="#monitor" class="console-btn primary">TELEMETRY DECK</a>
+        <a href="#pipeline" class="console-btn primary">ARQUITECTURA // SPEC</a>
       </div>
     </header>
 
@@ -705,67 +594,32 @@ def get_landing_html(app_name: str, app_version: str) -> str:
       </p>
     </section>
 
-    <!-- UpTimeRobot & Health Monitoring Console -->
-    <section class="telemetry-rack" id="monitor">
-      <div class="rack-header">
-        <div class="rack-title">
-          <span class="led-indicator" id="led-status"></span>
-          <span>DISPONIBILIDAD &amp; MONITORIZACIÓN EN VIVO (UPTIMEROBOT COMPATIBLE)</span>
-        </div>
-        <div class="rack-badge" id="badge-status">HTTP 200 // OPERATIVO</div>
+    <!-- Hardware & Processing Specs Strip -->
+    <div class="specs-strip">
+      <div class="spec-box">
+        <span class="spec-box-label">// MATRIZ GRÁFICA</span>
+        <span class="spec-box-value">512 × 512 PX</span>
+        <span class="spec-box-desc">Canvas normalizado RGBA 1:1 con alpha channel transparente.</span>
       </div>
-
-      <div class="rack-monitor-body">
-        <!-- Live Wave / Oscilloscope Canvas -->
-        <div class="canvas-container">
-          <canvas id="oscilloscope" width="1000" height="80"></canvas>
-          <div class="canvas-overlay-text">RTT OSCILLOSCOPE // REAL-TIME LATENCY STREAM</div>
-        </div>
-
-        <!-- Metrics Grid -->
-        <div class="metrics-grid">
-          <div class="metric-cell">
-            <span class="metric-tag">ESTADO DE SALUD</span>
-            <span class="metric-val" id="metric-health" style="color: var(--green);">OPERATIONAL</span>
-            <span class="metric-sub">STATUS CODE 200 OK</span>
-          </div>
-
-          <div class="metric-cell">
-            <span class="metric-tag">LATENCIA DE SONDEO (RTT)</span>
-            <span class="metric-val" id="metric-ping">-- ms</span>
-            <span class="metric-sub" id="metric-ping-sub">Calculando ping...</span>
-          </div>
-
-          <div class="metric-cell">
-            <span class="metric-tag">DAEMON CRIPTOGRÁFICO</span>
-            <span class="metric-val" id="metric-signer" style="color: var(--cyan);">PORT :8088</span>
-            <span class="metric-sub">Aweme v37 (Gorgon / Ladon)</span>
-          </div>
-
-          <div class="metric-cell">
-            <span class="metric-tag">REVISIÓN DEL NÚCLEO</span>
-            <span class="metric-val">{app_version}</span>
-            <span class="metric-sub">FastAPI + Async Worker Pool</span>
-          </div>
-        </div>
-
-        <!-- Keep-Alive Dispatch Instructions -->
-        <div class="uptime-dispatch">
-          <div class="uptime-spec-code">
-            <span>UPTIMEROBOT TARGET:</span> 
-            <span class="target" id="endpoint-url">https://{app_name}.onrender.com/health</span> 
-            <span style="color: var(--text-dim);">// INTERVAL: 5 MIN (EVITA SLEEP MODE DE RENDER)</span>
-          </div>
-          <div class="uptime-controls">
-            <button class="console-btn" onclick="copyEndpoint()">COPIAR ENDPOINT</button>
-            <button class="console-btn primary" onclick="runManualPing()">SONDEAR AHORA</button>
-          </div>
-        </div>
+      <div class="spec-box">
+        <span class="spec-box-label">// PROTOCOLO WHATSAPP</span>
+        <span class="spec-box-value">&lt; 500 KB WEBP</span>
+        <span class="spec-box-desc">Compresión adaptativa Pillow con retención de fidelidad visual.</span>
       </div>
-    </section>
+      <div class="spec-box">
+        <span class="spec-box-label">// PROTOCOLO TELEGRAM</span>
+        <span class="spec-box-value">WEBM VP9 / TGS</span>
+        <span class="spec-box-desc">Transcodificación acelerada en 338 ms para reproducción nativa.</span>
+      </div>
+      <div class="spec-box">
+        <span class="spec-box-label">// SEGURIDAD &amp; FIRMAS</span>
+        <span class="spec-box-value">AWEME v37.0.4</span>
+        <span class="spec-box-desc">Generación de cabeceras X-Gorgon, X-Khronos, X-Argus y X-Ladon.</span>
+      </div>
+    </div>
 
     <!-- Architecture & Engineering Pipeline -->
-    <div class="section-header-box">
+    <div class="section-header-box" id="pipeline">
       <div>
         <div class="section-tag">// SUB-SYSTEMS &amp; PIPELINES</div>
         <div class="section-title-plain">Flujo de Procesamiento Distribuido</div>
@@ -908,158 +762,28 @@ def get_landing_html(app_name: str, app_version: str) -> str:
         </div>
       </div>
     </div>
-
-    <!-- Footer -->
-    <footer class="console-footer">
-      <div>GEKO STICKER ENGINE • AUTONOMOUS TELEMETRY PLATFORM</div>
-      <div>&copy; 2026 GEKO (@GEK0V). ALL RIGHTS RESERVED.</div>
-    </footer>
   </div>
 
-  <div id="toast">ENDPOINT COPIADO AL PORTAPAPELES</div>
+  <!-- Footer -->
+  <footer class="console-footer">
+    <div class="container footer-content">
+      <div>GEKO STICKER ENGINE • ARCHITECTURE &amp; SYSTEMS PLATFORM</div>
+      <div>AUTONOMOUS MULTIMEDIA DSP PIPELINE // ALL RIGHTS RESERVED TO GEKO</div>
+    </div>
+  </footer>
 
   <script>
     // Real-time clock update (Madrid/Europe)
-    function updateClock() {{
+    function updateClock() {
       const now = new Date();
-      const timeStr = now.toLocaleTimeString('es-ES', {{ hour12: false }}) + ' UTC+1';
+      const timeStr = now.toLocaleTimeString('es-ES', { hour12: false }) + ' UTC+1';
       const el = document.getElementById('clock-display');
       if (el) el.innerText = timeStr;
-    }}
+    }
     setInterval(updateClock, 1000);
     updateClock();
-
-    // Canvas Oscilloscope simulator & history
-    const canvas = document.getElementById('oscilloscope');
-    const ctx = canvas.getContext('2d');
-    let pingHistory = [45, 48, 52, 44, 46, 50, 47, 43, 49, 46, 44, 48, 45, 47, 51, 46];
-
-    function drawWave() {{
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Grid lines
-      ctx.strokeStyle = '#181e28';
-      ctx.lineWidth = 1;
-      for (let x = 0; x < canvas.width; x += 40) {{
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
-        ctx.stroke();
-      }}
-      for (let y = 0; y < canvas.height; y += 20) {{
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
-        ctx.stroke();
-      }}
-
-      // Waveform
-      ctx.strokeStyle = '#00e676';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      const step = canvas.width / (pingHistory.length - 1);
-      
-      for (let i = 0; i < pingHistory.length; i++) {{
-        const val = pingHistory[i];
-        // map 0 - 200 ms to canvas height (inverted)
-        const y = Math.max(10, Math.min(canvas.height - 10, canvas.height - (val / 150) * canvas.height));
-        const x = i * step;
-        if (i === 0) {{
-          ctx.moveTo(x, y);
-        }} else {{
-          ctx.lineTo(x, y);
-        }}
-      }}
-      ctx.stroke();
-
-      // Draw point on current
-      const lastX = canvas.width;
-      const lastVal = pingHistory[pingHistory.length - 1];
-      const lastY = Math.max(10, Math.min(canvas.height - 10, canvas.height - (lastVal / 150) * canvas.height));
-      ctx.fillStyle = '#ff9f1c';
-      ctx.beginPath();
-      ctx.arc(lastX, lastY, 4, 0, Math.PI * 2);
-      ctx.fill();
-    }}
-    drawWave();
-
-    // Healthcheck ping execution
-    async function runManualPing() {{
-      const start = performance.now();
-      const pingVal = document.getElementById('metric-ping');
-      const pingSub = document.getElementById('metric-ping-sub');
-      const healthVal = document.getElementById('metric-health');
-      const badgeStatus = document.getElementById('badge-status');
-      const led = document.getElementById('led-status');
-
-      pingSub.innerText = 'Consultando /health...';
-
-      try {{
-        const res = await fetch('/health');
-        const latency = Math.round(performance.now() - start);
-        
-        pingVal.innerText = latency + ' ms';
-        pingSub.innerText = 'RTT verificado hace un instante';
-        
-        // Add to history
-        pingHistory.push(latency);
-        if (pingHistory.length > 25) pingHistory.shift();
-        drawWave();
-
-        if (res.ok) {{
-          healthVal.innerText = 'OPERATIONAL';
-          healthVal.style.color = 'var(--green)';
-          badgeStatus.innerText = 'HTTP 200 // OPERATIVO';
-          badgeStatus.style.borderColor = 'var(--green)';
-          badgeStatus.style.color = 'var(--green)';
-          led.className = 'led-indicator';
-        }} else {{
-          healthVal.innerText = 'DEGRADED (' + res.status + ')';
-          healthVal.style.color = 'var(--amber)';
-          badgeStatus.innerText = 'HTTP ' + res.status + ' // DEGRADADO';
-          badgeStatus.style.borderColor = 'var(--amber)';
-          badgeStatus.style.color = 'var(--amber)';
-          led.className = 'led-indicator amber';
-        }}
-      }} catch (err) {{
-        pingVal.innerText = 'ERR';
-        pingSub.innerText = 'Fallo de conexión';
-        healthVal.innerText = 'OFFLINE';
-        healthVal.style.color = 'var(--red)';
-        badgeStatus.innerText = 'OFFLINE // NO RESPONSE';
-        badgeStatus.style.borderColor = 'var(--red)';
-        badgeStatus.style.color = 'var(--red)';
-        led.className = 'led-indicator red';
-      }}
-    }}
-
-    // Auto-ping every 30s
-    runManualPing();
-    setInterval(runManualPing, 30000);
-
-    // Dynamic endpoint url configuration based on host
-    const currentOrigin = window.location.origin;
-    if (currentOrigin && currentOrigin.startsWith('http')) {{
-      const endpointEl = document.getElementById('endpoint-url');
-      if (endpointEl) {{
-        endpointEl.innerText = currentOrigin + '/health';
-      }}
-    }}
-
-    // Copy endpoint function
-    function copyEndpoint() {{
-      const targetText = document.getElementById('endpoint-url').innerText;
-      navigator.clipboard.writeText(targetText).then(() => {{
-        const toast = document.getElementById('toast');
-        toast.style.display = 'block';
-        setTimeout(() => {{
-          toast.style.display = 'none';
-        }}, 2200);
-      }}).catch(() => {{
-        alert('URL: ' + targetText);
-      }});
-    }}
   </script>
 </body>
 </html>
 """
+    return html_template.replace("{{APP_NAME}}", app_name).replace("{{APP_VERSION}}", app_version)
