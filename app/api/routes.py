@@ -145,5 +145,5 @@ async def get_direct_webp(
     return Response(
         content=sticker_bytes,
         media_type="image/webp",
-        headers={"Content-Disposition": "inline; filename="sticker.webp""}
+        headers={"Content-Disposition": 'inline; filename="sticker.webp"'}
     )
