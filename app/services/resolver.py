@@ -1,4 +1,5 @@
 import re
+import time
 import urllib.parse
 from typing import Optional, Dict, Any, Tuple
 import httpx
@@ -7,8 +8,10 @@ from app.schemas.sticker import ResolvedTarget
 
 class TikTokResolver:
     """
-    Handles TikTok short URL resolution (vm.tiktok.com, vt.tiktok.com, etc.),
-    tracking HTTP redirects and parsing canonical Aweme item and comment IDs.
+    Ultra-fast TikTok URL resolution with:
+    - Zero-network shortcut for direct/expanded URLs
+    - In-memory TTL cache for short links (vm.tiktok.com, vt.tiktok.com, tiktok.com/t/)
+    - Persistent HTTP keep-alive connection pooling
     """
 
     MOBILE_UA = (
@@ -17,16 +20,43 @@ class TikTokResolver:
     )
 
     AWEME_PATH_REGEX = re.compile(r"/(?:video|photo|v)/(\d+)")
+    SHORT_DOMAIN_REGEX = re.compile(r"https?://(?:vm|vt|m)\.tiktok\.com/|tiktok\.com/t/")
+
+    _CACHE: Dict[str, Tuple[float, ResolvedTarget]] = {}
+    _CACHE_TTL_SEC = 900  # 15 minutes
 
     @classmethod
     async def resolve_url(cls, short_url: str) -> ResolvedTarget:
         """
-        Follows HTTP redirects using a mobile user-agent to preserve TikTok share query parameters.
-        Extracts aweme_id, comment_id, and metadata.
+        Resolves short URL with caching and direct-parsing optimization.
         """
         if not short_url.startswith(("http://", "https://")):
             short_url = f"https://{short_url}"
 
+        now = time.time()
+        # 1. Check TTL cache
+        if short_url in cls._CACHE:
+            ts, cached_target = cls._CACHE[short_url]
+            if now - ts < cls._CACHE_TTL_SEC:
+                return cached_target
+
+        # 2. Fast Path: If URL is already full format and not a shortened redirect domain
+        if not cls.SHORT_DOMAIN_REGEX.search(short_url):
+            aweme_id, comment_id, author_id, aweme_type, query_params = cls.parse_url_parameters(short_url)
+            if aweme_id:
+                target = ResolvedTarget(
+                    original_url=short_url,
+                    expanded_url=short_url,
+                    aweme_id=aweme_id,
+                    comment_id=comment_id,
+                    author_id=author_id,
+                    aweme_type=aweme_type,
+                    params=query_params
+                )
+                cls._CACHE[short_url] = (now, target)
+                return target
+
+        # 3. Follow HTTP redirects for shortened URLs
         headers = {
             "User-Agent": cls.MOBILE_UA,
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -58,7 +88,7 @@ class TikTokResolver:
         if not aweme_id:
             raise ValueError(f"Could not extract aweme_id from URL: {final_url}")
 
-        return ResolvedTarget(
+        resolved = ResolvedTarget(
             original_url=short_url,
             expanded_url=final_url,
             aweme_id=aweme_id,
@@ -68,20 +98,21 @@ class TikTokResolver:
             params=query_params
         )
 
+        cls._CACHE[short_url] = (now, resolved)
+        return resolved
+
     @classmethod
     def parse_url_parameters(cls, target_url: str) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str], Dict[str, Any]]:
         parsed = urllib.parse.urlparse(target_url)
         query = urllib.parse.parse_qs(parsed.query)
 
         # Extract aweme_id:
-        # Priority 1: share_item_id or item_id in query params
         aweme_id = None
         if "share_item_id" in query:
             aweme_id = query["share_item_id"][0]
         elif "item_id" in query:
             aweme_id = query["item_id"][0]
         
-        # Priority 2: regex match on URL path (/video/123... or /photo/123...)
         if not aweme_id:
             match = cls.AWEME_PATH_REGEX.search(parsed.path)
             if match:
@@ -94,7 +125,6 @@ class TikTokResolver:
         elif "comment_id" in query:
             comment_id = query["comment_id"][0]
 
-        # Extract author_id & aweme_type
         author_id = query.get("comment_author_id", [None])[0] or query.get("user_id", [None])[0]
         aweme_type = query.get("aweme_type", [None])[0]
 

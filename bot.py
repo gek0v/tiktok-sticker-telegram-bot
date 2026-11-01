@@ -59,23 +59,35 @@ def save_to_cache(files: dict) -> str:
     return sid
 
 
+# Global persistent HTTP client with connection pooling
+_HTTP_CLIENT = None
+
+def get_http_client():
+    global _HTTP_CLIENT
+    if _HTTP_CLIENT is None or _HTTP_CLIENT.is_closed:
+        import httpx
+        _HTTP_CLIENT = httpx.AsyncClient(
+            timeout=35.0,
+            limits=httpx.Limits(max_keepalive_connections=20, max_connections=50)
+        )
+    return _HTTP_CLIENT
+
+
 def create_sticker_from_image(img_bytes: bytes) -> bytes:
-    """Normalizes any input image into Telegram/WhatsApp compliant 512x512 WebP."""
+    """Ultra-fast normalization into Telegram/WhatsApp compliant 512x512 WebP (BICUBIC + method 3)."""
     im = Image.open(io.BytesIO(img_bytes))
     if im.mode != "RGBA":
         im = im.convert("RGBA")
 
-    # Fit within 512x512 keeping aspect ratio
-    im.thumbnail((512, 512), Image.Resampling.LANCZOS)
+    im.thumbnail((512, 512), Image.Resampling.BICUBIC)
 
-    # Center on 512x512 transparent canvas
     canvas = Image.new("RGBA", (512, 512), (0, 0, 0, 0))
     offset_x = (512 - im.width) // 2
     offset_y = (512 - im.height) // 2
     canvas.paste(im, (offset_x, offset_y), im)
 
     output = io.BytesIO()
-    canvas.save(output, format="WEBP", quality=90, method=6)
+    canvas.save(output, format="WEBP", quality=85, method=3)
     return output.getvalue()
 
 
@@ -219,18 +231,26 @@ async def handle_message_text(update: Update, context: ContextTypes.DEFAULT_TYPE
     tiktok_url = match.group(0)
     logger.info(f"Processing TikTok URL: {tiktok_url}")
 
-    status_msg = await update.message.reply_text("⏳ *Procesando sticker con Aweme v37 y transcoder...*", parse_mode=ParseMode.MARKDOWN)
+    # Native Telegram action (instant feedback, avoids message creation/deletion latency)
     await context.bot.send_chat_action(chat_id=chat_id, action=ChatAction.CHOOSE_STICKER)
 
     try:
         api_url = f"{BACKEND_URL}/api/v1/sticker/convert"
-        async with httpx.AsyncClient(timeout=35.0) as client:
-            resp = await client.post(api_url, json={"url": tiktok_url, "include_base64": True})
+        client = get_http_client()
+        resp = await client.post(
+            api_url,
+            json={
+                "url": tiktok_url,
+                "include_base64": True,
+                "generate_tray": False,
+                "generate_telegram_webm": True
+            }
+        )
 
         if resp.status_code != 200:
             error_detail = resp.text[:200]
             logger.warning(f"Backend failed for {tiktok_url}: HTTP {resp.status_code} - {error_detail}")
-            await status_msg.edit_text(
+            await update.message.reply_text(
                 "⚠️ *No se pudo extraer el sticker de TikTok*\n"
                 "Asegúrate de que el enlace apunta a un comentario con sticker o imagen válido.",
                 parse_mode=ParseMode.MARKDOWN
@@ -244,7 +264,6 @@ async def handle_message_text(update: Update, context: ContextTypes.DEFAULT_TYPE
         raw_webm = base64.b64decode(data["telegram_webm_base64"]) if data.get("telegram_webm_base64") else None
 
         if is_animated and raw_webm:
-            # Cache files for on-demand download button
             sid = save_to_cache({
                 "sticker_whatsapp.webp": raw_webp,
                 "sticker_telegram.webm": raw_webm,
@@ -257,7 +276,6 @@ async def handle_message_text(update: Update, context: ContextTypes.DEFAULT_TYPE
                 ]
             ])
 
-            # Send single native animated Telegram Video Sticker (.webm) with download buttons
             try:
                 webm_buf = io.BytesIO(raw_webm)
                 webm_buf.name = "sticker.webm"
@@ -272,7 +290,6 @@ async def handle_message_text(update: Update, context: ContextTypes.DEFAULT_TYPE
                     )
 
         else:
-            # Static Sticker
             if raw_webp:
                 sid = save_to_cache({
                     "sticker.webp": raw_webp,
@@ -294,23 +311,17 @@ async def handle_message_text(update: Update, context: ContextTypes.DEFAULT_TYPE
                         caption=f"✅ Sticker estático ({size_kb:.1f} KB)"
                     )
 
-        try:
-            await status_msg.delete()
-        except Exception:
-            pass
-
     except Exception as e:
         logger.exception("Error processing TikTok request")
-        await status_msg.edit_text(
-            f"❌ *Ocurrió un error al procesar el sticker:*\n`{str(e)}`",
+        await update.message.reply_text(
+            f"❌ *Ocurrió un error al procesar el sticker:*\n{str(e)}",
             parse_mode=ParseMode.MARKDOWN
         )
 
 
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Converts user-sent photos directly into standard WebP stickers with download button."""
+    """Converts user-sent photos directly into standard WebP stickers at ultra-low latency."""
     chat_id = update.effective_chat.id
-    status_msg = await update.message.reply_text("🎨 *Convirtiendo imagen a formato Sticker (512x512 WebP)...*", parse_mode=ParseMode.MARKDOWN)
     await context.bot.send_chat_action(chat_id=chat_id, action=ChatAction.CHOOSE_STICKER)
 
     try:
@@ -328,17 +339,11 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("📥 Descargar archivo WebP / WhatsApp", callback_data=f"dl:{sid}:webp")]
         ])
 
-        # Reply with single native sticker + inline download button
         await update.message.reply_sticker(sticker=io.BytesIO(webp_bytes), reply_markup=keyboard)
-
-        try:
-            await status_msg.delete()
-        except Exception:
-            pass
 
     except Exception as e:
         logger.exception("Error converting photo to sticker")
-        await status_msg.edit_text(f"❌ *Error al convertir imagen:* `{str(e)}`", parse_mode=ParseMode.MARKDOWN)
+        await update.message.reply_text(f"❌ *Error al convertir imagen:* {str(e)}", parse_mode=ParseMode.MARKDOWN)
 
 
 def main():

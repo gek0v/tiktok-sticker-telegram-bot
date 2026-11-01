@@ -15,6 +15,18 @@ from app.services.transcoder import StickerTranscoder
 
 router = APIRouter(prefix="/api/v1/sticker", tags=["Stickers"])
 
+# Persistent HTTP client with connection pooling for upstream CDN downloads
+_HTTP_CLIENT: httpx.AsyncClient = None
+
+def get_http_client() -> httpx.AsyncClient:
+    global _HTTP_CLIENT
+    if _HTTP_CLIENT is None or _HTTP_CLIENT.is_closed:
+        _HTTP_CLIENT = httpx.AsyncClient(
+            timeout=settings.HTTP_TIMEOUT_SECONDS,
+            limits=httpx.Limits(max_keepalive_connections=20, max_connections=50)
+        )
+    return _HTTP_CLIENT
+
 @router.post("/resolve", response_model=dict)
 async def resolve_tiktok_sticker(
     request: ResolveRequest,
@@ -37,7 +49,6 @@ async def resolve_tiktok_sticker(
             comment_id=resolved.comment_id
         )
     except Exception as e:
-        # Return resolution even if media fetch fails or needs authentication
         return {
             "target": resolved,
             "media": None,
@@ -58,7 +69,7 @@ async def convert_tiktok_sticker(
 ):
     """
     End-to-End: Resolves URL, extracts media from Aweme, and transcodes strictly
-    to WhatsApp WebP specifications (512x512, <500KB animated, <=3s, loop 0).
+    to WhatsApp WebP and Telegram VP9 specifications at ultra-low latency.
     """
     target_media_url = request.media_url
     is_animated_hint = request.is_animated
@@ -76,24 +87,25 @@ async def convert_tiktok_sticker(
     if not target_media_url:
         raise HTTPException(status_code=400, detail="Either 'url' or 'media_url' must be provided")
 
-    # 2. Download original CDN media bytes
+    # 2. Download original CDN media bytes using pooled HTTP client
     try:
-        async with httpx.AsyncClient(timeout=settings.HTTP_TIMEOUT_SECONDS) as client:
-            resp = await client.get(target_media_url, headers={
-                "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X)"
-            })
-            if resp.status_code != 200:
-                raise HTTPException(status_code=502, detail=f"Failed downloading CDN resource: HTTP {resp.status_code}")
-            raw_bytes = resp.content
+        client = get_http_client()
+        resp = await client.get(target_media_url, headers={
+            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X)"
+        })
+        if resp.status_code != 200:
+            raise HTTPException(status_code=502, detail=f"Failed downloading CDN resource: HTTP {resp.status_code}")
+        raw_bytes = resp.content
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Error downloading media: {str(e)}")
 
-    # 3. Transcode to WhatsApp WebP
+    # 3. Transcode to WebP & WebM VP9 in parallel
     try:
         sticker_bytes, tray_bytes, result = transcoder.transcode(
             raw_bytes=raw_bytes,
             is_animated_hint=is_animated_hint,
-            generate_tray=request.generate_tray
+            generate_tray=request.generate_tray,
+            generate_telegram_webm=request.generate_telegram_webm
         )
         if not request.include_base64:
             result.base64_data = None
@@ -124,14 +136,14 @@ async def get_direct_webp(
         target_media_url = media.source_url
         is_animated_hint = media.is_animated
 
-    async with httpx.AsyncClient(timeout=settings.HTTP_TIMEOUT_SECONDS) as client:
-        resp = await client.get(target_media_url)
-        raw_bytes = resp.content
+    client = get_http_client()
+    resp = await client.get(target_media_url)
+    raw_bytes = resp.content
 
-    sticker_bytes, _, _ = transcoder.transcode(raw_bytes, is_animated_hint=is_animated_hint)
+    sticker_bytes, _, _ = transcoder.transcode(raw_bytes, is_animated_hint=is_animated_hint, generate_tray=False, generate_telegram_webm=False)
 
     return Response(
         content=sticker_bytes,
         media_type="image/webp",
-        headers={"Content-Disposition": "inline; filename=\"sticker.webp\""}
+        headers={"Content-Disposition": "inline; filename="sticker.webp""}
     )
