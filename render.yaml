@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: geko-tiktok-telegram-bot
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: SIGNER_MODE
+        value: remote
+      - key: REMOTE_SIGNER_URL
+        value: http://127.0.0.1:8088
+      - key: PYTHONUNBUFFERED
+        value: "1"
