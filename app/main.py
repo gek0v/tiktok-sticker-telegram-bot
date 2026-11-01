@@ -6,9 +6,10 @@ except ImportError:
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from app.config import settings
 from app.api.routes import router as sticker_router
+from app.landing import get_landing_html
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -26,13 +27,16 @@ app.add_middleware(
 
 app.include_router(sticker_router)
 
-@app.get("/", tags=["System"])
-async def root():
-    return {
-        "status": "ok",
-        "service": settings.APP_NAME,
-        "version": settings.APP_VERSION
-    }
+@app.get("/", response_class=HTMLResponse, tags=["System"])
+async def root(request: Request):
+    accept = request.headers.get("accept", "")
+    if "application/json" in accept and "text/html" not in accept:
+        return JSONResponse(content={
+            "status": "ok",
+            "service": settings.APP_NAME,
+            "version": settings.APP_VERSION
+        })
+    return HTMLResponse(content=get_landing_html(settings.APP_NAME, settings.APP_VERSION))
 
 @app.get("/health", tags=["System"])
 async def health_check():
